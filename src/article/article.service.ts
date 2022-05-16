@@ -1,57 +1,54 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Article } from './article.model';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { v4 as uuid } from 'uuid';
 import { UpdateArticleDto } from './dto/update-article.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { Article } from '@prisma/client';
 
 @Injectable()
 export class ArticleService {
-  private articleList = [];
+  constructor(private prisma: PrismaService) {}
 
-  getArticles(): Article[] {
-    return this.articleList;
+  async getArticles(): Promise<Article[]> {
+    return await this.prisma.article.findMany({});
   }
 
-  getArticleById(id: string): Article {
-    const article = this.articleList.find((article) => article.id === id);
+  async getArticleById(id: number): Promise<Article> {
+    const article = await this.prisma.article.findUnique({
+      where: {
+        id,
+      },
+    });
+
     if (!article) throw new NotFoundException();
+
     return article;
   }
 
-  createArticle(article: CreateArticleDto): Article {
-    const newArticle: Article = {
-      id: uuid(),
-      title: article.title,
-      content: article.content,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-
-    this.articleList.push(newArticle);
+  async createArticle(article: CreateArticleDto): Promise<Article> {
+    const newArticle: Article = await this.prisma.article.create({
+      data: { ...article },
+    });
 
     return newArticle;
   }
 
-  updateArticle(id: string, articleDto: UpdateArticleDto): Article {
+  async updateArticle(
+    id: number,
+    articleDto: UpdateArticleDto,
+  ): Promise<Article> {
     const { title, content } = articleDto;
-    const index: number = this.articleList.findIndex(
-      (article) => article.id === id,
-    );
+    const article = await this.prisma.article.findUnique({ where: { id } });
 
-    this.articleList[index] = {
-      id,
-      title,
-      content,
-      created_at: this.articleList[index].created_at,
-      updated_at: new Date().toISOString(),
-    };
+    if (!article) throw new NotFoundException();
 
-    return this.articleList[index];
+    return await this.prisma.article.update({
+      where: { id },
+      data: { ...articleDto },
+    });
   }
 
-  deleteArticleById(id: string): void {
-    this.articleList = this.articleList.filter(
-      (article: Article) => article.id !== id,
-    );
+  async deleteArticleById(id: number): Promise<Article> {
+    return await this.prisma.article.delete({ where: { id } });
   }
 }

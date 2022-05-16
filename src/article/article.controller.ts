@@ -7,7 +7,7 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
-import { Article } from './article.model';
+import { Article } from '@prisma/client';
 import { ArticleService } from './article.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
@@ -17,30 +17,30 @@ export class ArticleController {
   constructor(private articleService: ArticleService) {}
 
   @Post()
-  createArticle(@Body() article: CreateArticleDto): Article {
+  createArticle(@Body() article: CreateArticleDto): Promise<Article> {
     return this.articleService.createArticle(article);
   }
 
   @Get()
-  getArticles(): Article[] {
+  getArticles(): Promise<Article[]> {
     return this.articleService.getArticles();
   }
 
   @Get(':id')
-  getArticleById(@Param('id') id: string): Article {
+  getArticleById(@Param('id') id: number): Promise<Article> {
     return this.articleService.getArticleById(id);
   }
 
   @Patch(':id')
   updateArticleById(
-    @Param('id') id: string,
+    @Param('id') id: number,
     @Body() updateArticle: UpdateArticleDto,
-  ): Article {
+  ): Promise<Article> {
     return this.articleService.updateArticle(id, updateArticle);
   }
 
   @Delete(':id')
-  deleteArticleById(@Param('id') id: string): void {
+  deleteArticleById(@Param('id') id: number): Promise<Article> {
     return this.articleService.deleteArticleById(id);
   }
 }
