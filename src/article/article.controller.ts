@@ -6,13 +6,16 @@ import {
   Param,
   Patch,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 import { Article } from '@prisma/client';
+import { JwtGuard } from '../auth/guard/jwt.guard';
 import { ArticleService } from './article.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 
 @Controller('articles')
+@UseGuards(JwtGuard)
 export class ArticleController {
   constructor(private articleService: ArticleService) {}
 
