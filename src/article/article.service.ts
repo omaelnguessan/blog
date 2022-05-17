@@ -8,46 +8,77 @@ import { Article } from '@prisma/client';
 export class ArticleService {
   constructor(private prisma: PrismaService) {}
 
-  // async getArticles(): Promise<Article[]> {
-  //   return await this.prisma.article.findMany({});
-  // }
+  async getArticles(): Promise<Article[]> {
+    return await this.prisma.article.findMany({});
+  }
 
-  // async getArticleById(id: number): Promise<Article> {
-  //   const article = await this.prisma.article.findUnique({
-  //     where: {
-  //       id,
-  //     },
-  //   });
+  async getArticleById(id: number): Promise<Article> {
+    const article = await this.prisma.article.findUnique({
+      where: {
+        id,
+      },
+    });
 
-  //   if (!article) throw new NotFoundException();
+    if (!article) throw new NotFoundException();
 
-  //   return article;
-  // }
+    return article;
+  }
 
-  // async createArticle(article: CreateArticleDto): Promise<Article> {
-  //   const newArticle: Article = await this.prisma.article.create({
-  //     data: { ...article },
-  //   });
+  async createArticle(
+    userId: number,
+    article: CreateArticleDto,
+  ): Promise<Article> {
+    const newArticle: Article = await this.prisma.article.create({
+      data: { title: article.title, content: article.content, userId: userId },
+    });
 
-  //   return newArticle;
-  // }
+    return newArticle;
+  }
 
-  // async updateArticle(
-  //   id: number,
-  //   articleDto: UpdateArticleDto,
-  // ): Promise<Article> {
-  //   const { title, content } = articleDto;
-  //   const article = await this.prisma.article.findUnique({ where: { id } });
+  async getArticleByIdAndAuthorId(
+    id: number,
+    userId: number,
+  ): Promise<Article> {
+    const article = await this.prisma.article.findFirst({
+      where: {
+        id: id,
+        userId: userId,
+      },
+    });
 
-  //   if (!article) throw new NotFoundException();
+    if (!article) throw new NotFoundException();
 
-  //   return await this.prisma.article.update({
-  //     where: { id },
-  //     data: { ...articleDto },
-  //   });
-  // }
+    return article;
+  }
 
-  // async deleteArticleById(id: number): Promise<Article> {
-  //   return await this.prisma.article.delete({ where: { id } });
-  // }
+  async getArticleByAuthorId(userId: number): Promise<Article[]> {
+    return await this.prisma.article.findMany({ where: { userId: userId } });
+  }
+
+  async updateArticle(
+    userId: number,
+    id: number,
+    articleDto: UpdateArticleDto,
+  ): Promise<Article> {
+    const article = await this.prisma.article.findFirst({
+      where: {
+        id: id,
+        userId: userId,
+      },
+    });
+
+    if (!article) throw new NotFoundException();
+
+    return await this.prisma.article.update({
+      where: { id },
+      data: { ...articleDto },
+    });
+  }
+
+  async deleteArticleById(userId: number, id: number): Promise<Article> {
+    const article = this.getArticleByIdAndAuthorId(id, userId);
+    return await this.prisma.article.delete({
+      where: { id: id },
+    });
+  }
 }

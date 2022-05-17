@@ -8,42 +8,64 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { Article } from '@prisma/client';
+import { Article, User } from '@prisma/client';
+import { GetUser } from 'src/auth/decorator/get-user.decorator';
 import { JwtGuard } from '../auth/guard/jwt.guard';
 import { ArticleService } from './article.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 
 @Controller('articles')
-@UseGuards(JwtGuard)
 export class ArticleController {
   constructor(private articleService: ArticleService) {}
+  @Get()
+  getArticles(): Promise<Article[]> {
+    return this.articleService.getArticles();
+  }
 
-  // @Post()
-  // createArticle(@Body() article: CreateArticleDto): Promise<Article> {
-  //   return this.articleService.createArticle(article);
-  // }
+  @Get(':id')
+  getArticleById(@Param('id') id: number): Promise<Article> {
+    return this.articleService.getArticleById(id);
+  }
 
-  // @Get()
-  // getArticles(): Promise<Article[]> {
-  //   return this.articleService.getArticles();
-  // }
+  @Post()
+  @UseGuards(JwtGuard)
+  createArticle(
+    @GetUser() user: User,
+    @Body() article: CreateArticleDto,
+  ): Promise<Article> {
+    return this.articleService.createArticle(user.id, article);
+  }
 
-  // @Get(':id')
-  // getArticleById(@Param('id') id: number): Promise<Article> {
-  //   return this.articleService.getArticleById(id);
-  // }
+  @Get('/auth/user')
+  getArticlesByAuthUser(@GetUser() user: User): Promise<Article[]> {
+    return this.articleService.getArticleByAuthorId(user.id);
+  }
 
-  // @Patch(':id')
-  // updateArticleById(
-  //   @Param('id') id: number,
-  //   @Body() updateArticle: UpdateArticleDto,
-  // ): Promise<Article> {
-  //   return this.articleService.updateArticle(id, updateArticle);
-  // }
+  @Get(':id/auth/user')
+  getArticlesByIdAndAuthor(
+    @GetUser() user: User,
+    @Param('id') id: number,
+  ): Promise<Article> {
+    return this.articleService.getArticleByIdAndAuthorId(user.id, id);
+  }
 
-  // @Delete(':id')
-  // deleteArticleById(@Param('id') id: number): Promise<Article> {
-  //   return this.articleService.deleteArticleById(id);
-  // }
+  @Patch(':id')
+  @UseGuards(JwtGuard)
+  updateArticleById(
+    @GetUser() user: User,
+    @Param('id') id: number,
+    @Body() updateArticle: UpdateArticleDto,
+  ): Promise<Article> {
+    return this.articleService.updateArticle(user.id, id, updateArticle);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtGuard)
+  deleteArticleById(
+    @GetUser() user: User,
+    @Param('id') id: number,
+  ): Promise<Article> {
+    return this.articleService.deleteArticleById(user.id, id);
+  }
 }
